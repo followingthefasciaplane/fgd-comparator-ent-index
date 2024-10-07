@@ -1,0 +1,4 @@
+pyparsing
+faker==0.7.4
+future
+valvefgd

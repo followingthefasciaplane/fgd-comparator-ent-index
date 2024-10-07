@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CS:S to CS:GO FGD Comparison</title>
+    <!-- Bootstrap CSS for styling and components -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <style>
+        body {
+            padding: 20px;
+        }
+        .entity-name {
+            cursor: pointer;
+        }
+        .property-name, .input-name, .spawnflag-name {
+            cursor: pointer;
+        }
+        .highlight-diff {
+            background-color: #fff3cd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">CS:S to CS:GO FGD Comparison</h1>
+
+        <div class="mb-4">
+            <h3>Summary</h3>
+            <ul>
+                <li>New Entities: <span id="new-entities-count">0</span></li>
+                <li>Removed Entities: <span id="removed-entities-count">0</span></li>
+                <li>Modified Entities: <span id="modified-entities-count">0</span></li>
+                <li>Editor Data Changes: <span id="editor-data-changes-count">0</span></li>
+            </ul>
+        </div>
+
+        <div class="mb-4">
+            <h3>Entities</h3>
+            <div class="accordion" id="entitiesAccordion">
+                <!-- New Entities -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingNew">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseNew" aria-expanded="false" aria-controls="collapseNew">
+                            New Entities (<span id="new-entities-number">0</span>)
+                        </button>
+                    </h2>
+                    <div id="collapseNew" class="accordion-collapse collapse" aria-labelledby="headingNew" data-bs-parent="#entitiesAccordion">
+                        <div class="accordion-body">
+                            <ul id="new-entities-list">
+                                <!-- New entities will be populated here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Removed Entities -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingRemoved">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRemoved" aria-expanded="false" aria-controls="collapseRemoved">
+                            Removed Entities (<span id="removed-entities-number">0</span>)
+                        </button>
+                    </h2>
+                    <div id="collapseRemoved" class="accordion-collapse collapse" aria-labelledby="headingRemoved" data-bs-parent="#entitiesAccordion">
+                        <div class="accordion-body">
+                            <ul id="removed-entities-list">
+                                <!-- Removed entities will be populated here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modified Entities -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="headingModified">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseModified" aria-expanded="false" aria-controls="collapseModified">
+                            Modified Entities (<span id="modified-entities-number">0</span>)
+                        </button>
+                    </h2>
+                    <div id="collapseModified" class="accordion-collapse collapse" aria-labelledby="headingModified" data-bs-parent="#entitiesAccordion">
+                        <div class="accordion-body">
+                            <div class="list-group" id="modified-entities-list">
+                                <!-- Modified entities will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Changes Modal -->
+        <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Entity Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <!-- Details will be populated here -->
+                <div id="entity-details">
+                    <!-- Content dynamically added -->
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap JS Bundle (includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        // Function to fetch JSON data
+        async function fetchData() {
+            try {
+                const response = await fetch('cs_fgd_differences_summary.json');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching JSON data:', error);
+                alert('Failed to load JSON data. Please ensure "cs_fgd_differences_summary.json" is in the correct directory.');
+            }
+        }
+
+        // Function to initialize the page
+        async function init() {
+            const data = await fetchData();
+            if (!data) return;
+
+            // Populate summary counts
+            document.getElementById('new-entities-count').textContent = data.new_entities.length;
+            document.getElementById('removed-entities-count').textContent = data.removed_entities.length;
+            document.getElementById('modified-entities-count').textContent = Object.keys(data.modified_entities).length;
+            // Assuming editor_data_changes exists in JSON
+            const editorDataChangesCount = data.editor_data_changes ? 
+                (data.editor_data_changes.new.length + data.editor_data_changes.removed.length + Object.keys(data.editor_data_changes.modified).length) : 0;
+            document.getElementById('editor-data-changes-count').textContent = editorDataChangesCount;
+
+            // Populate new entities
+            const newEntitiesList = document.getElementById('new-entities-list');
+            document.getElementById('new-entities-number').textContent = data.new_entities.length;
+            data.new_entities.forEach(entity => {
+                const li = document.createElement('li');
+                li.textContent = entity;
+                newEntitiesList.appendChild(li);
+            });
+
+            // Populate removed entities
+            const removedEntitiesList = document.getElementById('removed-entities-list');
+            document.getElementById('removed-entities-number').textContent = data.removed_entities.length;
+            data.removed_entities.forEach(entity => {
+                const li = document.createElement('li');
+                li.textContent = entity;
+                removedEntitiesList.appendChild(li);
+            });
+
+            // Populate modified entities
+            const modifiedEntitiesList = document.getElementById('modified-entities-list');
+            document.getElementById('modified-entities-number').textContent = Object.keys(data.modified_entities).length;
+            const modifiedEntities = data.modified_entities;
+            for (const [entityName, changes] of Object.entries(modifiedEntities)) {
+                const listItem = document.createElement('button');
+                listItem.className = 'list-group-item list-group-item-action';
+                listItem.textContent = entityName;
+                listItem.addEventListener('click', () => showEntityDetails(entityName, changes));
+                modifiedEntitiesList.appendChild(listItem);
+            }
+        }
+
+        function showEntityDetails(entityName, changes) {
+            const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+            const modalTitle = document.getElementById('detailsModalLabel');
+            const modalBody = document.getElementById('entity-details');
+        
+            modalTitle.textContent = `Entity: ${entityName}`;
+            modalBody.innerHTML = ''; // Clear previous content
+        
+            const sections = ['properties', 'inputs', 'outputs', 'spawnflags'];
+            
+            sections.forEach(sectionName => {
+                if (changes[sectionName]) {
+                    const section = createSection(sectionName, changes[sectionName]);
+                    modalBody.appendChild(section);
+                }
+            });
+        
+            modal.show();
+        }
+        
+        function createSection(sectionName, sectionData) {
+            const section = document.createElement('div');
+            section.className = 'mb-3';
+        
+            const header = document.createElement('h5');
+            header.textContent = capitalizeFirstLetter(sectionName);
+            section.appendChild(header);
+        
+            ['new', 'removed', 'modified'].forEach(changeType => {
+                if (sectionData[changeType]) {
+                    const subSection = createSubSection(changeType, sectionData[changeType]);
+                    if (subSection) section.appendChild(subSection);
+                }
+            });
+        
+            return section;
+        }
+        
+        function createSubSection(changeType, changeData) {
+            if (!changeData || (Array.isArray(changeData) && changeData.length === 0) || 
+                (typeof changeData === 'object' && Object.keys(changeData).length === 0)) {
+                return null;
+            }
+        
+            const subSection = document.createElement('div');
+            const subHeader = document.createElement('h6');
+            subHeader.textContent = capitalizeFirstLetter(changeType);
+            subSection.appendChild(subHeader);
+        
+            if (Array.isArray(changeData)) {
+                const ul = document.createElement('ul');
+                changeData.forEach(item => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    ul.appendChild(li);
+                });
+                subSection.appendChild(ul);
+            } else if (typeof changeData === 'object') {
+                const table = createDifferencesTable(changeData);
+                subSection.appendChild(table);
+            }
+        
+            return subSection;
+        }
+        
+        function createDifferencesTable(diffs) {
+            const table = document.createElement('table');
+            table.className = 'table table-bordered table-sm';
+        
+            const thead = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            ['Attribute', 'CS:S', 'CS:GO'].forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+        
+            const tbody = document.createElement('tbody');
+        
+            for (const [attr, values] of Object.entries(diffs)) {
+                const row = document.createElement('tr');
+        
+                const tdAttr = document.createElement('td');
+                tdAttr.textContent = attr;
+                row.appendChild(tdAttr);
+        
+                ['css', 'csgo'].forEach(game => {
+                    const td = document.createElement('td');
+                    td.innerHTML = formatPropertyValue(values, game);
+                    row.appendChild(td);
+                });
+        
+                if (JSON.stringify(values.css) !== JSON.stringify(values.csgo)) {
+                    row.classList.add('highlight-diff');
+                }
+        
+                tbody.appendChild(row);
+            }
+        
+            table.appendChild(tbody);
+            return table;
+        }
+        
+        function formatPropertyValue(values, game) {
+            if (values.value_type && values.choices) {
+                const type = values.value_type[game];
+                const choices = values.choices[game];
+        
+                if (type === "choices" && Array.isArray(choices) && choices.length > 0) {
+                    return `Choices: ${choices.map(c => `${c.value} (${c.display_name})`).join(', ')}`;
+                } else if (type === "boolean") {
+                    return "Boolean";
+                } else {
+                    return capitalizeFirstLetter(type) || "Not set";
+                }
+            } else {
+                return formatNestedValue(values[game]);
+            }
+        }
+        
+        function formatNestedValue(value) {
+            if (typeof value === 'object' && value !== null) {
+                if (Array.isArray(value)) {
+                    let list = '<ul>';
+                    value.forEach(item => {
+                        if (typeof item === 'object' && item !== null) {
+                            if (item.value !== undefined && item.display_name !== undefined) {
+                                list += `<li>${item.value} (${item.display_name})</li>`;
+                            } else {
+                                list += `<li>${JSON.stringify(item)}</li>`;
+                            }
+                        } else {
+                            list += `<li>${item}</li>`;
+                        }
+                    });
+                    list += '</ul>';
+                    return list;
+                } else {
+                    return `<pre>${JSON.stringify(value, null, 2)}</pre>`;
+                }
+            }
+            return value === undefined ? 'Not set' : String(value);
+        }
+        
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        
+        // Initialize the page on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
