@@ -7,3 +7,5 @@ If something is weird check the raw json data.
 - It will not include entities that are not inside the FGD data, but may potentially still work and be in maps.
 
 Made for https://rampsliders.wiki/doku.php?id=mapping:conversion
+
+You can modify the python script to generate your own json data for your own purposes, or for different FGDs.
