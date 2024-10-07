@@ -1,5 +1,5 @@
 Live demo: https://rampsliders.wiki/ents/
 
-JS / HTML is beta and currently doesn't parse json data correctly. See Json for deeper referencing.
+Live demo viewer is beta. If something is weird check the raw json data.
 
 Made for https://rampsliders.wiki/doku.php?id=mapping:conversion
