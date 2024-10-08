@@ -2,7 +2,6 @@ from valvefgd import FgdParse, Fgd, FgdEntity, FgdEntityProperty, FgdEntitySpawn
 import json
 from typing import Dict, List, Any, Union
 import io
-from collections import defaultdict
 
 def load_fgd(file_path: str) -> Fgd:
     try:
@@ -145,38 +144,29 @@ def compare_property(css_prop: FgdEntityProperty, csgo_prop: FgdEntityProperty) 
     return differences if differences else None
 
 def compare_spawnflags(css_flags: List[FgdEntitySpawnflag], csgo_flags: List[FgdEntitySpawnflag]) -> Dict[str, Any]:
-    css_flag_dict = defaultdict(list)
-    for flag in css_flags:
-        try:
-            flag_value = int(flag.value)
-        except ValueError:
-            print(f"Invalid flag value in CS:S FGD: {flag.value}")
-            continue
-        css_flag_dict[flag_value].append(flag)
-
-    csgo_flag_dict = defaultdict(list)
-    for flag in csgo_flags:
-        try:
-            flag_value = int(flag.value)
-        except ValueError:
-            print(f"Invalid flag value in CS:GO FGD: {flag.value}")
-            continue
-        csgo_flag_dict[flag_value].append(flag)
+    css_flag_dict = {int(flag.value): flag for flag in css_flags}
+    csgo_flag_dict = {int(flag.value): flag for flag in csgo_flags}
 
     differences = {
-        'new': [f"{value} ({flag.display_name})" for value in set(csgo_flag_dict.keys()) - set(css_flag_dict.keys()) for flag in csgo_flag_dict[value]],
-        'removed': [f"{value} ({flag.display_name})" for value in set(css_flag_dict.keys()) - set(csgo_flag_dict.keys()) for flag in css_flag_dict[value]],
+        'new': [],
+        'removed': [],
         'modified': {}
     }
 
-    for flag_value in set(css_flag_dict.keys()) & set(csgo_flag_dict.keys()):
-        css_flag_list = css_flag_dict[flag_value]
-        csgo_flag_list = csgo_flag_dict[flag_value]
+    all_values = set(css_flag_dict.keys()) | set(csgo_flag_dict.keys())
 
-        for css_flag, csgo_flag in zip(css_flag_list, csgo_flag_list):
+    for value in all_values:
+        css_flag = css_flag_dict.get(value)
+        csgo_flag = csgo_flag_dict.get(value)
+
+        if css_flag and not csgo_flag:
+            differences['removed'].append(f"{value} ({css_flag.display_name})")
+        elif csgo_flag and not css_flag:
+            differences['new'].append(f"{value} ({csgo_flag.display_name})")
+        elif css_flag and csgo_flag:
             flag_diff = compare_spawnflag(css_flag, csgo_flag)
             if flag_diff:
-                key = f"{flag_value} ({csgo_flag.display_name})"
+                key = f"{value}"
                 differences['modified'][key] = flag_diff
 
     # Clean up empty categories
@@ -184,17 +174,20 @@ def compare_spawnflags(css_flags: List[FgdEntitySpawnflag], csgo_flags: List[Fgd
 
     return differences if differences else None
 
-
 def compare_spawnflag(css_flag: FgdEntitySpawnflag, csgo_flag: FgdEntitySpawnflag) -> Dict[str, Any]:
     differences = {}
-    # List of attributes to compare; ensure these are actual attributes of FgdEntitySpawnflag
-    attributes_to_compare = ['display_name', 'default_value']
-
-    for attr in attributes_to_compare:
-        css_value = getattr(css_flag, attr, None)
-        csgo_value = getattr(csgo_flag, attr, None)
-        if css_value != csgo_value:
-            differences[attr] = {'css': css_value, 'csgo': csgo_value}
+    
+    if css_flag.display_name != csgo_flag.display_name:
+        differences['display_name'] = {
+            'css': css_flag.display_name,
+            'csgo': csgo_flag.display_name
+        }
+    
+    if css_flag.default_value != csgo_flag.default_value:
+        differences['default_value'] = {
+            'css': css_flag.default_value,
+            'csgo': csgo_flag.default_value
+        }
 
     return differences if differences else None
 

@@ -243,7 +243,7 @@
         function createDifferencesTable(diffs) {
             const table = document.createElement('table');
             table.className = 'table table-bordered table-sm';
-        
+    
             const thead = document.createElement('thead');
             const headerRow = document.createElement('tr');
             ['Attribute', 'CS:S', 'CS:GO'].forEach(header => {
@@ -253,72 +253,123 @@
             });
             thead.appendChild(headerRow);
             table.appendChild(thead);
-        
+    
             const tbody = document.createElement('tbody');
-        
+    
             for (const [attr, values] of Object.entries(diffs)) {
-                const row = document.createElement('tr');
-        
-                const tdAttr = document.createElement('td');
-                tdAttr.textContent = attr;
-                row.appendChild(tdAttr);
-        
-                ['css', 'csgo'].forEach(game => {
-                    const td = document.createElement('td');
-                    td.innerHTML = formatPropertyValue(values, game);
-                    row.appendChild(td);
-                });
-        
-                if (JSON.stringify(values.css) !== JSON.stringify(values.csgo)) {
-                    row.classList.add('highlight-diff');
+                if (attr === 'spawnflags' && values.modified) {
+                    Object.entries(values.modified).forEach(([flag, flagData]) => {
+                        const row = createSpawnflagRow(flag, flagData);
+                        tbody.appendChild(row);
+                    });
+                } else if (attr === 'definitions') {
+                    const row = createDefinitionsRow(values);
+                    tbody.appendChild(row);
+                } else {
+                    const row = createAttributeRow(attr, values);
+                    tbody.appendChild(row);
                 }
-        
-                tbody.appendChild(row);
             }
-        
+    
             table.appendChild(tbody);
             return table;
         }
+
+        function createAttributeRow(attr, values) {
+            const row = document.createElement('tr');
+    
+            const tdAttr = document.createElement('td');
+            tdAttr.textContent = attr;
+            row.appendChild(tdAttr);
+    
+            ['css', 'csgo'].forEach(game => {
+                const td = document.createElement('td');
+                td.innerHTML = formatPropertyValue(values, game);
+                row.appendChild(td);
+            });
+    
+            if (JSON.stringify(values.css) !== JSON.stringify(values.csgo)) {
+                row.classList.add('highlight-diff');
+            }
+    
+            return row;
+        }
+
+        function createSpawnflagRow(flag, flagData) {
+            const row = document.createElement('tr');
+            row.classList.add('highlight-diff');
+    
+            const tdFlag = document.createElement('td');
+            tdFlag.textContent = `Spawnflag ${flag}`;
+            row.appendChild(tdFlag);
+    
+            ['css', 'csgo'].forEach(game => {
+                const td = document.createElement('td');
+                let content = '';
+                if (flagData.display_name) {
+                    content += `<strong>Display Name:</strong> ${flagData.display_name[game]}<br>`;
+                }
+                if (flagData.default_value !== undefined) {
+                    content += `<strong>Default Value:</strong> ${flagData.default_value[game]}`;
+                }
+                td.innerHTML = content;
+                row.appendChild(td);
+            });
+    
+            return row;
+        }
+
+        function createDefinitionsRow(definitions) {
+            const row = document.createElement('tr');
+            row.classList.add('highlight-diff');
+    
+            const tdDef = document.createElement('td');
+            tdDef.textContent = 'Definitions';
+            row.appendChild(tdDef);
+    
+            ['css', 'csgo'].forEach(game => {
+                const td = document.createElement('td');
+                const ul = document.createElement('ul');
+                definitions[game].forEach(def => {
+                    const li = document.createElement('li');
+                    li.textContent = `${def.name}: ${def.args.join(', ')}`;
+                    ul.appendChild(li);
+                });
+                td.appendChild(ul);
+                row.appendChild(td);
+            });
+    
+            return row;
+        }
         
         function formatPropertyValue(values, game) {
-            if (values.value_type && values.choices) {
-                const type = values.value_type[game];
-                const choices = values.choices[game];
-        
-                if (type === "choices" && Array.isArray(choices) && choices.length > 0) {
-                    return `Choices: ${choices.map(c => `${c.value} (${c.display_name})`).join(', ')}`;
-                } else if (type === "boolean") {
-                    return "Boolean";
-                } else {
-                    return capitalizeFirstLetter(type) || "Not set";
-                }
-            } else {
+            if (values.choices) {
+                return formatChoices(values.choices[game]);
+            } else if (values.default_value) {
+                return `Default: ${values.default_value[game]}`;
+            } else if (values[game] !== undefined) {
                 return formatNestedValue(values[game]);
+            } else {
+                return formatNestedValue(values);
             }
         }
         
+        function formatChoices(choices) {
+            if (Array.isArray(choices)) {
+                return choices.map(choice => `${choice.value}: ${choice.display_name}`).join('<br>');
+            }
+            return 'No choices available';
+        }
+    
         function formatNestedValue(value) {
             if (typeof value === 'object' && value !== null) {
                 if (Array.isArray(value)) {
-                    let list = '<ul>';
-                    value.forEach(item => {
-                        if (typeof item === 'object' && item !== null) {
-                            if (item.value !== undefined && item.display_name !== undefined) {
-                                list += `<li>${item.value} (${item.display_name})</li>`;
-                            } else {
-                                list += `<li>${JSON.stringify(item)}</li>`;
-                            }
-                        } else {
-                            list += `<li>${item}</li>`;
-                        }
-                    });
-                    list += '</ul>';
-                    return list;
+                    return value.map(item => JSON.stringify(item)).join(', ');
                 } else {
-                    return `<pre>${JSON.stringify(value, null, 2)}</pre>`;
+                    return Object.entries(value).map(([k, v]) => `${k}: ${v}`).join(', ');
                 }
             }
-            return value === undefined ? 'Not set' : String(value);
+            return value === undefined ? 'Read the JSON' : String(value);
         }
         
         function capitalizeFirstLetter(string) {
