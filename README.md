@@ -8,4 +8,4 @@ If something is weird check the raw json data.
 
 Made for https://rampsliders.wiki/doku.php?id=mapping:conversion
 
-You can modify the python script to generate your own json data for your own purposes, or for different FGDs.
+You can modify the python script to generate your own json data for your own purposes, or for different FGDs. You don't really need to modify it, simply just replace the FGDs.
