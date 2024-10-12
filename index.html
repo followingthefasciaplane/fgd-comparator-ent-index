@@ -308,11 +308,6 @@
             section.className = 'mb-3';
             section.innerHTML = `
                 <h5>Definitions</h5>
-                <h6>Changes:</h6>
-                <ul>
-                    ${definitions.changes.added.map(base => `<li>Added: ${base}</li>`).join('')}
-                    ${definitions.changes.removed.map(base => `<li>Removed: ${base}</li>`).join('')}
-                </ul>
                 <h6>CS:S:</h6>
                 <ul>
                     ${definitions.css.map(def => `<li>${def.name}(${def.args.join(', ')})</li>`).join('')}
@@ -364,8 +359,8 @@
                 subSection.appendChild(ul);
             } else if (typeof changeData === 'object') {
                 if (sectionName === 'spawnflags') {
-                    const table = createSpawnflagsTable(changeData, changeType);
-                    subSection.appendChild(table);
+                    const spawnflagsTable = createSpawnflagsTable({[changeType]: changeData});
+                    subSection.appendChild(spawnflagsTable);
                 } else {
                     const table = createDifferencesTable(changeData);
                     subSection.appendChild(table);
@@ -403,42 +398,85 @@
             return table;
         }
 
-        function createSpawnflagsTable(spawnflags, changeType) {
+        function createSpawnflagsTable(spawnflags) {
             const table = document.createElement('table');
             table.className = 'table table-bordered table-sm';
-            table.innerHTML = `
+            
+            let tableContent = `
                 <thead>
                     <tr>
                         <th>Value</th>
-                        <th>Display Name</th>
-                        <th>Default Value</th>
+                        <th>Display Name (CS:S)</th>
+                        <th>Display Name (CS:GO)</th>
+                        <th>Default Value (CS:S)</th>
+                        <th>Default Value (CS:GO)</th>
+                        <th>Change Type</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${spawnflags.map(flag => `
-                        <tr>
-                            <td>${flag.value}</td>
-                            <td>${flag.display_name}</td>
-                            <td>${flag.default_value}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
             `;
+        
+            const processSpawnflag = (value, data, type) => {
+                const cssDisplayName = data.display_name?.css || '';
+                const csgoDisplayName = data.display_name?.csgo || '';
+                const cssDefaultValue = data.default_value?.css ?? '';
+                const csgoDefaultValue = data.default_value?.csgo ?? '';
+        
+                return `
+                    <tr>
+                        <td>${value}</td>
+                        <td>${cssDisplayName}</td>
+                        <td>${csgoDisplayName}</td>
+                        <td>${cssDefaultValue}</td>
+                        <td>${csgoDefaultValue}</td>
+                        <td>${type}</td>
+                    </tr>
+                `;
+            };
+        
+            ['new', 'removed', 'modified'].forEach(changeType => {
+                if (spawnflags[changeType]) {
+                    if (Array.isArray(spawnflags[changeType])) {
+                        spawnflags[changeType].forEach(flag => {
+                            tableContent += processSpawnflag(flag.value, flag, capitalizeFirstLetter(changeType));
+                        });
+                    } else if (typeof spawnflags[changeType] === 'object') {
+                        for (const [value, data] of Object.entries(spawnflags[changeType])) {
+                            tableContent += processSpawnflag(value, data, capitalizeFirstLetter(changeType));
+                        }
+                    }
+                }
+            });
+        
+            if (tableContent === table.innerHTML) {
+                tableContent += `
+                    <tr>
+                        <td colspan="6">No spawnflags data available</td>
+                    </tr>
+                `;
+            }
+        
+            tableContent += '</tbody>';
+            table.innerHTML = tableContent;
             return table;
         }
     
         function formatValue(value) {
             if (value === undefined || value === null) {
-                return "See JSON";
+                return "N/A";
             }
             if (typeof value === 'object') {
                 if (Array.isArray(value)) {
                     return value.map(item => formatValue(item)).join('<br>');
                 } else if (value.choices) {
                     return formatChoices(value.choices);
+                } else if (value.css !== undefined || value.csgo !== undefined) {
+                    return `CS:S: ${formatValue(value.css)}<br>CS:GO: ${formatValue(value.csgo)}`;
+                } else if (value.value_type) {
+                    return `Value Type: ${formatValue(value.value_type)}<br>Choices: ${formatValue(value.choices)}`;
                 } else {
                     return Object.entries(value)
-                        .map(([k, v]) => `${k}: ${v}`)
+                        .map(([k, v]) => `${k}: ${formatValue(v)}`)
                         .join('<br>');
                 }
             }
@@ -448,6 +486,9 @@
         function formatChoices(choices) {
             if (!choices) {
                 return "No choices available";
+            }
+            if (Array.isArray(choices)) {
+                return choices.map(choice => `${choice.value}: ${choice.display_name}`).join('<br>');
             }
             return Object.entries(choices)
                 .map(([value, displayName]) => `${value}: ${displayName}`)
