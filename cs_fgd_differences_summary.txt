@@ -1,0 +1,247 @@
+Summary of differences between CS:S and CS:GO FGDs
+
+Comparison date: 2024-10-13T02:04:05.987501
+CSS Version: Counter-Strike: Source
+CSGO Version: Counter-Strike: Global Offensive
+
+New entities in CS:GO: 128
+Removed entities in CS:GO: 12
+Modified entities: 313
+Backward porting issues: 1388
+
+Top 10 modified entities with the most changes:
+
+hostage_entity (Porting Complexity: High):
+  Properties:
+    New: 34
+    Removed: 0
+    Modified: 1
+  Inputs:
+    New: 9
+    Removed: 0
+    Modified: 0
+  Outputs:
+    New: 8
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Definitions changed
+
+prop_dynamic_override (Porting Complexity: High):
+  Properties:
+    New: 15
+    Removed: 4
+    Modified: 13
+  Inputs:
+    New: 11
+    Removed: 1
+    Modified: 0
+  Outputs:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+
+prop_dynamic (Porting Complexity: High):
+  Properties:
+    New: 14
+    Removed: 4
+    Modified: 14
+  Inputs:
+    New: 11
+    Removed: 1
+    Modified: 0
+  Outputs:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+
+prop_dynamic_base (Porting Complexity: High):
+  Properties:
+    New: 14
+    Removed: 4
+    Modified: 13
+  Inputs:
+    New: 11
+    Removed: 1
+    Modified: 0
+  Outputs:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Definitions changed
+
+prop_dynamic_ornament (Porting Complexity: High):
+  Properties:
+    New: 14
+    Removed: 4
+    Modified: 13
+  Inputs:
+    New: 11
+    Removed: 1
+    Modified: 0
+  Outputs:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+
+prop_physics_multiplayer (Porting Complexity: High):
+  Properties:
+    New: 14
+    Removed: 4
+    Modified: 12
+  Inputs:
+    New: 8
+    Removed: 1
+    Modified: 0
+  Outputs:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+
+prop_physics (Porting Complexity: High):
+  Properties:
+    New: 14
+    Removed: 4
+    Modified: 11
+  Inputs:
+    New: 8
+    Removed: 1
+    Modified: 0
+  Outputs:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+
+func_tracktrain (Porting Complexity: High):
+  Properties:
+    New: 9
+    Removed: 3
+    Modified: 6
+  Inputs:
+    New: 12
+    Removed: 3
+    Modified: 0
+  Outputs:
+    New: 1
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 1
+    Removed: 0
+    Modified: 0
+  Definitions changed
+
+prop_door_rotating (Porting Complexity: High):
+  Properties:
+    New: 13
+    Removed: 1
+    Modified: 6
+  Inputs:
+    New: 11
+    Removed: 1
+    Modified: 0
+  Outputs:
+    New: 1
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 1
+    Removed: 0
+    Modified: 0
+  Definitions changed
+
+prop_static_base (Porting Complexity: High):
+  Properties:
+    New: 14
+    Removed: 5
+    Modified: 8
+  Inputs:
+    New: 6
+    Removed: 0
+    Modified: 0
+  Outputs:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Spawnflags:
+    New: 0
+    Removed: 0
+    Modified: 0
+  Definitions changed
+
+Top backward porting issues:
+  Entity: filter_activator_model
+  Issue: New entity in CSGO, not present in CSS
+  Severity: High
+
+  Entity: phys_lengthconstraint
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: vscripts
+
+  Entity: phys_lengthconstraint
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: thinkfunction
+
+  Entity: weapon_molotov
+  Issue: New entity in CSGO, not present in CSS
+  Severity: High
+
+  Entity: prop_static_base
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: maxcpulevel
+
+  Entity: prop_static_base
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: disableX360
+
+  Entity: prop_static_base
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: shadowdepthnocache
+
+  Entity: prop_static_base
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: rendercolor
+
+  Entity: prop_static_base
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: renderamt
+
+  Entity: prop_static_base
+  Issue: Property exists in CSGO but not in CSS
+  Severity: Medium
+  Property: maxgpulevel
+
